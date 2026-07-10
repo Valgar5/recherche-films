@@ -79,53 +79,23 @@ async function chargerFlux(blog) {
 
     const flux =
         blog.url +
-        "/feeds/posts/default?alt=json&max-results=500";
+        "/feeds/posts/default?alt=json&max-results=50";
 
-
-    const essais = [
-        flux,
+    const adresse =
         "https://api.allorigins.win/raw?url=" +
-        encodeURIComponent(flux)
-    ];
+        encodeURIComponent(flux);
 
+    const reponse = await fetch(adresse, {
+        cache: "no-store"
+    });
 
-    let derniereErreur = "";
-
-
-    for (const adresse of essais) {
-
-        try {
-
-            const reponse =
-                await fetch(adresse, {
-                    cache: "no-store"
-                });
-
-
-            if (!reponse.ok) {
-                throw new Error(
-                    "HTTP " + reponse.status
-                );
-            }
-
-
-            const texte =
-                await reponse.text();
-
-
-            return JSON.parse(texte);
-
-
-        } catch(e) {
-
-            derniereErreur = e.message;
-
-        }
+    if (!reponse.ok) {
+        throw new Error("HTTP " + reponse.status);
     }
 
+    const texte = await reponse.text();
 
-    throw new Error(derniereErreur);
-}
+    return JSON.parse(texte);
 
 function normaliser(texte) {
     return texte
