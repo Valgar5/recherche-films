@@ -81,38 +81,19 @@ async function chargerFlux(blog) {
         blog.url +
         "/feeds/posts/default?alt=json&max-results=50";
 
-    const essais = [
-        flux,
-        "https://corsproxy.io/?" +
-        encodeURIComponent(flux)
-    ];
+    const adresse =
+        "https://api.allorigins.win/get?url=" +
+        encodeURIComponent(flux);
 
-    let derniereErreur = "";
+    const reponse = await fetch(adresse);
 
-    for (const adresse of essais) {
-
-        try {
-
-            const reponse = await fetch(adresse, {
-                cache: "no-store"
-            });
-
-            if (!reponse.ok) {
-                throw new Error("HTTP " + reponse.status);
-            }
-
-            const texte = await reponse.text();
-
-            return JSON.parse(texte);
-
-        } catch(e) {
-
-            derniereErreur = e.message;
-
-        }
+    if (!reponse.ok) {
+        throw new Error("HTTP " + reponse.status);
     }
 
-    throw new Error(derniereErreur);
+    const data = await reponse.json();
+
+    return JSON.parse(data.contents);
 }
 
 
