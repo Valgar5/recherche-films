@@ -75,7 +75,7 @@ const blogs = [
 ];
 
 
-function chargerFlux(blog) {
+function chargerFlux(blog, recherche) {
 
     return new Promise((resolve, reject) => {
 
@@ -97,12 +97,12 @@ function chargerFlux(blog) {
                 document.createElement("script");
 
             const url =
-                blog.url +
-                "/feeds/posts/default" +
-                "?alt=json-in-script" +
-                "&start-index=" + index +
-                "&max-results=" + taillePage +
-                "&callback=" + callback;
+            blog.url +
+            "/feeds/posts/default" +
+            "?q=" + encodeURIComponent(recherche) +
+            "&alt=json-in-script" +
+            "&max-results=20" +
+            "&callback=" + callback;
 
 
             window[callback] = function(data) {
@@ -222,7 +222,7 @@ async function chercher() {
 
 
             const data =
-                await chargerFlux(blog);
+                await chargerFlux(blog, film);
                 console.log("Flux chargé :", blog.nom, data);
 
 
