@@ -82,82 +82,43 @@ function chargerFlux(blog, recherche) {
         const callback =
             "callbackFlux" + Date.now();
 
-        let tousLesArticles = [];
-        let page = 0;
-        const taillePage = 150;
+        const script =
+            document.createElement("script");
 
-        function chargerPage() {
-
-            page++;
-
-            const index =
-                ((page - 1) * taillePage) + 1;
-
-            const script =
-                document.createElement("script");
-
-            const url =
+        const url =
             blog.url +
             "/feeds/posts/default" +
             "?q=" + encodeURIComponent(recherche) +
             "&alt=json-in-script" +
-            "&max-results=20" +
+            "&max-results=50" +
             "&callback=" + callback;
 
 
-            window[callback] = function(data) {
+        window[callback] = function(data) {
 
-                const articles =
-                    data.feed.entry || [];
+            delete window[callback];
+            script.remove();
 
-                tousLesArticles =
-                    tousLesArticles.concat(articles);
+            resolve(data);
 
-
-                if (articles.length === taillePage) {
-
-                    script.remove();
-
-                    chargerPage();
-
-                } else {
-
-                    delete window[callback];
-                    script.remove();
-
-                    resolve({
-                        feed: {
-                            entry: tousLesArticles
-                        }
-                    });
-
-                }
-
-            };
+        };
 
 
-            script.onerror = function() {
+        script.onerror = function() {
 
-                delete window[callback];
-                script.remove();
+            delete window[callback];
+            script.remove();
 
-                reject(
-                    new Error(
-                        "Impossible de charger le flux"
-                    )
-                );
+            reject(
+                new Error("Impossible de charger le flux")
+            );
 
-            };
+        };
 
 
-            script.src = url;
+        script.src = url;
 
-            document.body.appendChild(script);
-
-        }
-
-
-        chargerPage();
+        document.body.appendChild(script);
 
     });
 }
