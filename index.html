@@ -116,6 +116,15 @@ async function chargerFlux(blog) {
 }
 
 
+    function normaliser(texte) {
+    return texte
+        .toLowerCase()
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .replace(/['’]/g, "")
+        .trim();
+}
+
 async function chercher() {
 
     const film =
