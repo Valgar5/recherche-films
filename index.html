@@ -75,25 +75,46 @@ const blogs = [
 ];
 
 
-async function chargerFlux(blog) {
+function chargerFlux(blog) {
 
-    const flux =
-        blog.url +
-        "/feeds/posts/default?alt=json&max-results=50";
+    return new Promise((resolve, reject) => {
 
-    const adresse =
-        "https://api.allorigins.win/get?url=" +
-        encodeURIComponent(flux);
+        const nomCallback =
+            "callbackFlux" + Date.now();
 
-    const reponse = await fetch(adresse);
+        const script =
+            document.createElement("script");
 
-    if (!reponse.ok) {
-        throw new Error("HTTP " + reponse.status);
-    }
+        const flux =
+            blog.url +
+            "/feeds/posts/default?alt=json-in-script&max-results=50&callback=" +
+            nomCallback;
 
-    const data = await reponse.json();
+        window[nomCallback] = function(data) {
 
-    return JSON.parse(data.contents);
+            delete window[nomCallback];
+            script.remove();
+
+            resolve(data);
+
+        };
+
+        script.onerror = function() {
+
+            delete window[nomCallback];
+            script.remove();
+
+            reject(
+                new Error("Impossible de charger le flux")
+            );
+
+        };
+
+        script.src = flux;
+
+        document.body.appendChild(script);
+
+    });
 }
 
 
