@@ -191,14 +191,21 @@ async function chercher() {
             for (const article of articles) {
 
 
-                const titre =
-                    article.title.$t;
+                const titre = article.title.$t;
 
+                const contenu =
+                article.content?.$t || "";
 
-                const titreNormalise = normaliser(titre);
-                const rechercheNormalisee = normaliser(film);
+                const texteComplet =
+                titre + " " + contenu;
 
-                if (titreNormalise.includes(rechercheNormalisee))
+                const texteNormalise =
+                normaliser(texteComplet);
+
+                const rechercheNormalisee =
+                normaliser(film);
+
+                if (texteNormalise.includes(rechercheNormalisee))
                 {
 
 
