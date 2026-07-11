@@ -129,10 +129,9 @@ function normaliser(texte) {
         .toLowerCase()
         .normalize("NFD")
         .replace(/[\u0300-\u036f]/g, "")
-        .replace(/['’]/g, "")
+        .replace(/[^a-z0-9]/g, "")
         .trim();
 }
-
 async function chercher() {
 
     const film =
@@ -189,6 +188,7 @@ async function chercher() {
 
             const articles =
                 data.feed.entry || [];
+                console.log("RESULTATS BRUTS", blog.nom, articles);
 
             console.log(
             blog.nom,
@@ -202,39 +202,31 @@ async function chercher() {
 
             for (const article of articles) {
 
+            const titre = article.title.$t;
+        
+            trouve = true;
 
-                const titre = article.title.$t;
-
-
-                    trouve = true;
-
-
-                    const lien =
-                        article.link.find(
-                            l =>
-                            l.rel === "alternate"
-                        );
-
-
-                    html += `
-                    <div class="resultat">
-
-                    <div class="blog">
-                    ${blog.nom}
-                    </div>
-
-                    ${titre}<br>
-
-                    <a href="${lien.href}" target="_blank">
-                    Ouvrir l'article
-                    </a>
-
-                    </div>
-                    `;
-
-                }
-
-            }
+            const lien = article.link.find(
+                l => l.rel === "alternate"
+            );
+        
+            html += `
+            <div class="resultat">
+        
+                <div class="blog">
+                ${blog.nom}
+                </div>
+        
+                ${titre}<br>
+        
+                <a href="${lien.href}" target="_blank">
+                Ouvrir l'article
+                </a>
+        
+            </div>
+            `;
+        
+        }
 
 
             if (!trouve) {
