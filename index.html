@@ -551,60 +551,100 @@ function chargerToileLibre(blog) {
 
     function chargerRSS(blog) {
 
-    return fetch(
-        "https://api.allorigins.win/raw?url=" +
-        encodeURIComponent(blog.url + "/feed/")
-    )
+    return new Promise((resolve, reject) => {
 
-    .then(response => {
-
-        if (!response.ok) {
-            throw new Error("Impossible de charger le RSS");
-        }
-
-        return response.text();
-
-    })
-
-    .then(xml => {
-
-        const doc = new DOMParser()
-            .parseFromString(xml, "text/xml");
+        let tousLesArticles = [];
+        let page = 1;
 
 
-        const articles = [];
+        function chargerPage() {
+
+            const url =
+                "https://public-api.wordpress.com/rest/v1.1/sites/" +
+                encodeURIComponent(blog.url) +
+                "/posts/" +
+                "?number=100" +
+                "&page=" + page;
 
 
-        doc.querySelectorAll("item")
-        .forEach(item => {
+            fetch(url)
 
-            articles.push({
+            .then(response => {
 
-                title:{
-                    $t:item.querySelector("title")?.textContent || ""
-                },
+                if (!response.ok) {
+                    throw new Error("API WordPress.com inaccessible");
+                }
 
-                content:{
-                    $t:item.querySelector("description")?.textContent || ""
-                },
+                return response.json();
 
-                link:[
-                    {
-                        rel:"alternate",
-                        href:item.querySelector("link")?.textContent || blog.url
-                    }
-                ]
+            })
+
+            .then(data => {
+
+
+                if (!data.posts || data.posts.length === 0) {
+
+                    resolve({
+
+                        feed:{
+                            entry:tousLesArticles
+                        }
+
+                    });
+
+                    return;
+
+                }
+
+
+                tousLesArticles = tousLesArticles.concat(
+
+                    data.posts.map(post => ({
+
+                        title:{
+                            $t:post.title
+                        },
+
+                        content:{
+                            $t:post.content
+                        },
+
+                        link:[
+                            {
+                                rel:"alternate",
+                                href:post.URL
+                            }
+                        ]
+
+                    }))
+
+                );
+
+
+                console.log(
+                    blog.nom,
+                    "chargés :",
+                    tousLesArticles.length
+                );
+
+
+                page++;
+
+                chargerPage();
+
+
+            })
+
+            .catch(error => {
+
+                reject(error);
 
             });
 
-        });
+        }
 
 
-        return {
-            feed:{
-                entry:articles
-            }
-        };
+        chargerPage();
 
     });
 
