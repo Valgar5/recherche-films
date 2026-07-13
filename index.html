@@ -190,12 +190,11 @@ function chargerFlux(blog, recherche) {
             document.createElement("script");
 
         const url =
-            blog.url +
-            "/feeds/posts/default" +
-            "?q=" + encodeURIComponent(recherche) +
-            "&alt=json-in-script" +
-            "&max-results=50" +
-            "&callback=" + callback;
+        blog.url +
+        "/feeds/posts/default" +
+        "?alt=json-in-script" +
+        "&max-results=500" +
+        "&callback=" + callback;
 
 
         window[callback] = function(data) {
@@ -282,13 +281,19 @@ for (let i = 0; i < reponses.length; i++) {
 
         const articles = data.feed.entry || [];
 
+        
+        const rechercheNorm = normaliser(film);
+
         let trouve = false;
 
         for (const article of articles) {
 
-            trouve = true;
-
             const titre = article.title.$t;
+
+            if (!normaliser(titre).includes(rechercheNorm))
+            continue;
+
+            trouve = true;
 
             const lien = article.link.find(
                 l => l.rel === "alternate"
