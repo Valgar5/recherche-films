@@ -521,9 +521,12 @@ function chargerToileLibre(blog) {
 
         const script = document.createElement("script");
 
+        const flux =
+            blog.url + "/feed.xml";
+
         const url =
             "https://api.rss2json.com/v1/api.json?rss_url=" +
-            encodeURIComponent(blog.url + "/feed/") +
+            encodeURIComponent(flux) +
             "&callback=" + callback;
 
 
@@ -532,16 +535,21 @@ function chargerToileLibre(blog) {
             delete window[callback];
             script.remove();
 
+            if (!data.items) {
+                reject(new Error("Aucun flux RSS trouvé"));
+                return;
+            }
+
             resolve({
                 feed: {
                     entry: data.items.map(item => ({
-                        title: {
-                            $t: item.title
+                        title:{
+                            $t:item.title
                         },
-                        link: [
+                        link:[
                             {
-                                rel: "alternate",
-                                href: item.link
+                                rel:"alternate",
+                                href:item.link
                             }
                         ]
                     }))
