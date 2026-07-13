@@ -283,7 +283,7 @@ for (let i = 0; i < reponses.length; i++) {
 
         const articles = data.feed.entry || [];
 
-        
+        console.log(blog.nom, articles.map(a => a.title.$t));
 
         let trouve = false;
 
