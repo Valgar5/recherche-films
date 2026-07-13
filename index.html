@@ -213,19 +213,19 @@ function chargerFlux(blog) {
                 tousLesArticles = tousLesArticles.concat(articles);
 
 
-                if (articles.length === 500) {
+                if (articles.length > 0) {
 
-                    index += 500;
+                    index += articles.length;
                     chargerPage();
-
+                
                 } else {
-
+                
                     resolve({
                         feed: {
                             entry: tousLesArticles
                         }
                     });
-
+                
                 }
 
             };
@@ -308,6 +308,8 @@ for (let i = 0; i < reponses.length; i++) {
         const data = resultat.value;
 
         const articles = data.feed.entry || [];
+
+        console.log(blog.nom, "page", index, "trouvés :", articles.length);
 
         console.log(blog.nom, articles.map(a => a.title.$t));
 
