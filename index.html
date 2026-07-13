@@ -268,103 +268,79 @@ async function chercher() {
     let compteur = 0;
 
 
-    for (const blog of blogs) {
+    status.innerHTML = "Recherche en cours...";
 
-        compteur++;
+const promesses = blogs.map(blog => chargerFlux(blog, film));
 
+const reponses = await Promise.allSettled(promesses);
 
-        status.innerHTML =
-            "Analyse " +
-            compteur +
-            "/" +
-            blogs.length +
-            " : " +
-            blog.nom;
+for (let i = 0; i < reponses.length; i++) {
 
+    const blog = blogs[i];
+    const resultat = reponses[i];
 
-        try {
+    if (resultat.status === "fulfilled") {
 
+        const data = resultat.value;
 
-           const data =
-                await chargerFlux(blog, film);
-                console.log("Flux chargé :", blog.nom, data);
+        const articles = data.feed.entry || [];
 
+        let trouve = false;
 
-            const articles =
-                data.feed.entry || [];
-                console.log("RESULTATS BRUTS", blog.nom, articles);
+        for (const article of articles) {
 
-            console.log(
-            blog.nom,
-            "Nombre de résultats Blogger :",
-            articles.length
-            );
-
-
-            let trouve = false;
-
-
-            for (const article of articles) {
+            trouve = true;
 
             const titre = article.title.$t;
-        
-            trouve = true;
 
             const lien = article.link.find(
                 l => l.rel === "alternate"
             );
-        
+
             html += `
             <div class="resultat">
-        
+
                 <div class="blog">
                 ${blog.nom}
                 </div>
-        
+
                 ${titre}<br>
-        
+
                 <a href="${lien.href}" target="_blank">
                 Ouvrir l'article
                 </a>
-        
+
             </div>
             `;
-        
         }
 
-
-            if (!trouve) {
-
-                html += `
-                <div class="resultat">
-                ${blog.nom} :
-                aucun titre trouvé
-                (${articles.length} articles lus)
-                </div>
-                `;
-
-            }
-
-
-        } catch(e) {
-
+        if (!trouve) {
 
             html += `
             <div class="resultat">
+            ${blog.nom} :
+            aucun titre trouvé
+            (${articles.length} articles lus)
+            </div>
+            `;
+        }
+
+    } else {
+
+        html += `
+        <div class="resultat">
 
             <div class="blog">
             ${blog.nom}
             </div>
 
             Erreur :
-            ${e.message}
+            ${resultat.reason.message}
 
-            </div>
-            `;
-
-        }
-
+        </div>
+        `;
     }
+}
 
 
     status.innerHTML =
