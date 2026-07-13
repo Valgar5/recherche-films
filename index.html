@@ -556,28 +556,21 @@ function chargerToileLibre(blog) {
         let tousLesArticles = [];
         let page = 1;
 
+
         function chargerPage() {
 
             const url =
-                "https://api.rss2json.com/v1/api.json?rss_url=" +
-                encodeURIComponent(blog.url + "/feed/?paged=" + page);
+                blog.url +
+                "/wp-json/wp/v2/posts" +
+                "?per_page=100" +
+                "&page=" + page;
 
 
             fetch(url)
 
             .then(response => {
 
-                if (!response.ok) {
-                    throw new Error("Erreur RSS2JSON");
-                }
-
-                return response.json();
-
-            })
-
-            .then(data => {
-
-                if (!data.items || data.items.length === 0) {
+                if (response.status === 400) {
 
                     resolve({
                         feed:{
@@ -585,25 +578,50 @@ function chargerToileLibre(blog) {
                         }
                     });
 
-                    return;
+                    return null;
                 }
 
 
+                if (!response.ok) {
+
+                    throw new Error(
+                        "Erreur API WordPress"
+                    );
+
+                }
+
+
+                return response.json();
+
+            })
+
+
+            .then(data => {
+
+                if (!data) return;
+
+
                 tousLesArticles = tousLesArticles.concat(
-                    data.items.map(item => ({
+
+                    data.map(item => ({
+
                         title:{
-                            $t:item.title
+                            $t:item.title.rendered
                         },
+
                         content:{
-                            $t:item.content || ""
+                            $t:item.content.rendered
                         },
+
                         link:[
                             {
                                 rel:"alternate",
                                 href:item.link
                             }
                         ]
+
                     }))
+
                 );
 
 
@@ -618,7 +636,9 @@ function chargerToileLibre(blog) {
 
                 chargerPage();
 
+
             })
+
 
             .catch(error => {
 
@@ -626,10 +646,12 @@ function chargerToileLibre(blog) {
 
             });
 
+
         }
 
 
         chargerPage();
+
 
     });
 
