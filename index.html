@@ -152,10 +152,10 @@ const blogs = [
     },
 
     {
-        nom: "hdmovpremier",
-        type: "toilelibre",
-        url: "https://hdmovpremier.toile-libre.org"
-    },
+     nom: "hdmovpremier",
+     type: "html",
+     url: "https://hdmovpremier.toile-libre.org"
+    }
 
     {
         nom: "HD PREMIERE",
@@ -421,6 +421,96 @@ function chargerToileLibre(blog) {
         script.src = url;
 
         document.body.appendChild(script);
+
+    });
+
+}
+
+    function chargerHtml(blog) {
+
+    return new Promise((resolve, reject) => {
+
+        const callback =
+            "callbackHTML" + Date.now() + Math.random().toString(36).substring(2);
+
+        const script = document.createElement("script");
+
+
+        const url =
+            "https://api.allorigins.win/raw?url=" +
+            encodeURIComponent(blog.url);
+
+
+        fetch(url)
+
+        .then(response => {
+
+            if (!response.ok) {
+                throw new Error("Site inaccessible");
+            }
+
+            return response.text();
+
+        })
+
+        .then(html => {
+
+
+            const doc = new DOMParser()
+                .parseFromString(html, "text/html");
+
+
+            const titres = [];
+
+
+            doc.querySelectorAll("h1,h2,h3,h4,a")
+            .forEach(element => {
+
+                let texte = element.textContent.trim();
+
+                if (texte.length > 3) {
+
+                    titres.push({
+
+                        title:{
+                            $t: texte
+                        },
+
+                        link:[
+                            {
+                                rel:"alternate",
+                                href: element.href || blog.url
+                            }
+                        ]
+
+                    });
+
+                }
+
+            });
+
+
+            resolve({
+
+                feed:{
+                    entry:titres
+                }
+
+            });
+
+
+        })
+
+        .catch(error => {
+
+            reject(
+                new Error(
+                    "Impossible de charger le HTML : " + error.message
+                )
+            );
+
+        });
+
 
     });
 
