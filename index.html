@@ -536,13 +536,16 @@ function chargerToileLibre(blog) {
         return {
             feed: {
                 entry: data.items.map(item => ({
-                    title: {
-                        $t: item.title
+                    title:{
+                        $t:item.title
                     },
-                    link: [
+                    content:{
+                        $t:item.content || ""
+                    },
+                    link:[
                         {
-                            rel: "alternate",
-                            href: item.link
+                            rel:"alternate",
+                            href:item.link
                         }
                     ]
                 }))
@@ -618,11 +621,15 @@ for (let i = 0; i < reponses.length; i++) {
 
         for (const article of articles) {
 
-            const titre = article.title.$t;
+            const titre = article.title.$t || "";
 
-            if (!normaliser(titre).includes(rechercheNorm))
-            continue;
-
+                const contenu = article.content ? article.content.$t : "";
+                
+                const texteRecherche =
+                    normaliser(titre + " " + contenu);
+                
+                if (!texteRecherche.includes(rechercheNorm))
+                continue;
             trouve = true;
 
             const lien = article.link.find(
