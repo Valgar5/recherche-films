@@ -551,106 +551,60 @@ function chargerToileLibre(blog) {
 
     function chargerRSS(blog) {
 
-    return new Promise((resolve, reject) => {
+    return fetch(
+        "https://api.allorigins.win/raw?url=" +
+        encodeURIComponent(blog.url + "/feed/")
+    )
 
-        let tousLesArticles = [];
-        let page = 1;
+    .then(response => {
 
+        if (!response.ok) {
+            throw new Error("Impossible de charger le RSS");
+        }
 
-        function chargerPage() {
+        return response.text();
 
-            const url =
-                blog.url +
-                "/wp-json/wp/v2/posts" +
-                "?per_page=100" +
-                "&page=" + page;
+    })
 
+    .then(xml => {
 
-            fetch(url)
-
-            .then(response => {
-
-                if (response.status === 400) {
-
-                    resolve({
-                        feed:{
-                            entry:tousLesArticles
-                        }
-                    });
-
-                    return null;
-                }
+        const doc = new DOMParser()
+            .parseFromString(xml, "text/xml");
 
 
-                if (!response.ok) {
-
-                    throw new Error(
-                        "Erreur API WordPress"
-                    );
-
-                }
+        const articles = [];
 
 
-                return response.json();
+        doc.querySelectorAll("item")
+        .forEach(item => {
 
-            })
+            articles.push({
 
+                title:{
+                    $t:item.querySelector("title")?.textContent || ""
+                },
 
-            .then(data => {
+                content:{
+                    $t:item.querySelector("description")?.textContent || ""
+                },
 
-                if (!data) return;
-
-
-                tousLesArticles = tousLesArticles.concat(
-
-                    data.map(item => ({
-
-                        title:{
-                            $t:item.title.rendered
-                        },
-
-                        content:{
-                            $t:item.content.rendered
-                        },
-
-                        link:[
-                            {
-                                rel:"alternate",
-                                href:item.link
-                            }
-                        ]
-
-                    }))
-
-                );
-
-
-                console.log(
-                    blog.nom,
-                    "chargés :",
-                    tousLesArticles.length
-                );
-
-
-                page++;
-
-                chargerPage();
-
-
-            })
-
-
-            .catch(error => {
-
-                reject(error);
+                link:[
+                    {
+                        rel:"alternate",
+                        href:item.querySelector("link")?.textContent || blog.url
+                    }
+                ]
 
             });
 
+        });
 
-        }
 
-
-        chargerPage();
+        return {
+            feed:{
+                entry:articles
+            }
+        };
 
     });
 
