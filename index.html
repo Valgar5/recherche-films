@@ -560,11 +560,11 @@ function chargerToileLibre(blog) {
         function chargerPage() {
 
             const url =
-                "https://public-api.wordpress.com/rest/v1.1/sites/" +
-                encodeURIComponent(blog.url) +
-                "/posts/" +
-                "?number=100" +
-                "&page=" + page;
+            "https://public-api.wordpress.com/rest/v1.1/sites/" +
+            encodeURIComponent(blog.url.replace("https://","")) +
+            "/posts/" +
+            "?number=100" +
+            "&page=" + page;
 
 
             fetch(url)
