@@ -195,10 +195,9 @@ const blogs = [
 
     {
         nom: "Saiko no Chimu",
-        type: "toilelibre",
+        type: "html",
         url: "https://saiko-no-chimu.fr"
     },
-
     {
         nom: "le steadyblog",
         type: "blogger",
@@ -252,8 +251,12 @@ function chargerFlux(blog) {
         return chargerToileLibre(blog);
     }
 
+    if (blog.type === "html") {
+        return chargerHtml(blog);
+    }
+
     return Promise.reject(
-        new Error("Type de blog inconnu")
+        new Error("Blog privé (invitation nécessaire)")
     );
 }
 
