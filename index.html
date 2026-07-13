@@ -262,45 +262,82 @@ function chargerBlogger(blog) {
 
     return new Promise((resolve, reject) => {
 
-        const callback =
-            "callbackFlux" + Date.now() + Math.random().toString(36).substring(2);
+        let tousLesArticles = [];
+        let index = 1;
+        const taillePage = 500;
 
-        const script = document.createElement("script");
+        function chargerPage() {
 
-        const url =
-            blog.url +
-            "/feeds/posts/default" +
-            "?alt=json-in-script" +
-            "&start-index=1" +
-            "&max-results=500" +
-            "&callback=" + callback;
+            const callback =
+                "callbackFlux" + Date.now() + Math.random().toString(36).substring(2);
 
+            const script = document.createElement("script");
 
-        window[callback] = function(data) {
-
-            delete window[callback];
-            script.remove();
-
-            resolve(data);
-
-        };
+            const url =
+                blog.url +
+                "/feeds/posts/default" +
+                "?alt=json-in-script" +
+                "&start-index=" + index +
+                "&max-results=" + taillePage +
+                "&callback=" + callback;
 
 
-        script.onerror = function() {
+            window[callback] = function(data) {
 
-            delete window[callback];
-            script.remove();
-
-            reject(
-                new Error("Impossible de charger le flux Blogger")
-            );
-
-        };
+                delete window[callback];
+                script.remove();
 
 
-        script.src = url;
+                const articles = data.feed.entry || [];
 
-        document.body.appendChild(script);
+                tousLesArticles = tousLesArticles.concat(articles);
+
+
+                console.log(
+                    blog.nom,
+                    "chargés :",
+                    tousLesArticles.length
+                );
+
+
+                if (articles.length === taillePage) {
+
+                    index += taillePage;
+                    chargerPage();
+
+                } else {
+
+                    resolve({
+                        feed:{
+                            entry:tousLesArticles
+                        }
+                    });
+
+                }
+
+            };
+
+
+            script.onerror = function() {
+
+                delete window[callback];
+                script.remove();
+
+                reject(
+                    new Error("Impossible de charger le flux Blogger")
+                );
+
+            };
+
+
+            script.src = url;
+
+            document.body.appendChild(script);
+
+        }
+
+
+        chargerPage();
 
     });
 
