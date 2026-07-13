@@ -179,7 +179,7 @@ const blogs = [
 ];
 
 
-function chargerFlux(blog, recherche) {
+function chargerFlux(blog) {
 
     return new Promise((resolve, reject) => {
 
@@ -268,7 +268,7 @@ async function chercher() {
 
 const rechercheNorm = normaliser(film);
 
-const promesses = blogs.map(blog => chargerFlux(blog, film));
+const promesses = blogs.map(blog => chargerFlux(blog));
 
 const reponses = await Promise.allSettled(promesses);
 
