@@ -551,43 +551,85 @@ function chargerToileLibre(blog) {
 
     function chargerRSS(blog) {
 
-    return fetch(
-        "https://api.rss2json.com/v1/api.json?rss_url=" +
-        encodeURIComponent(blog.url + "/feed/")
-    )
-    .then(response => {
+    return new Promise((resolve, reject) => {
 
-        if (!response.ok) {
-            throw new Error("Erreur RSS2JSON");
-        }
+        let tousLesArticles = [];
+        let page = 1;
 
-        return response.json();
+        function chargerPage() {
 
-    })
-    .then(data => {
+            const url =
+                "https://api.rss2json.com/v1/api.json?rss_url=" +
+                encodeURIComponent(blog.url + "/feed/?paged=" + page);
 
-        if (!data.items) {
-            throw new Error("Aucun article RSS trouvé");
-        }
 
-        return {
-            feed: {
-                entry: data.items.map(item => ({
-                    title:{
-                        $t:item.title
-                    },
-                    content:{
-                        $t:item.content || ""
-                    },
-                    link:[
-                        {
-                            rel:"alternate",
-                            href:item.link
+            fetch(url)
+
+            .then(response => {
+
+                if (!response.ok) {
+                    throw new Error("Erreur RSS2JSON");
+                }
+
+                return response.json();
+
+            })
+
+            .then(data => {
+
+                if (!data.items || data.items.length === 0) {
+
+                    resolve({
+                        feed:{
+                            entry:tousLesArticles
                         }
-                    ]
-                }))
-            }
-        };
+                    });
+
+                    return;
+                }
+
+
+                tousLesArticles = tousLesArticles.concat(
+                    data.items.map(item => ({
+                        title:{
+                            $t:item.title
+                        },
+                        content:{
+                            $t:item.content || ""
+                        },
+                        link:[
+                            {
+                                rel:"alternate",
+                                href:item.link
+                            }
+                        ]
+                    }))
+                );
+
+
+                console.log(
+                    blog.nom,
+                    "chargés :",
+                    tousLesArticles.length
+                );
+
+
+                page++;
+
+                chargerPage();
+
+            })
+
+            .catch(error => {
+
+                reject(error);
+
+            });
+
+        }
+
+
+        chargerPage();
 
     });
 
