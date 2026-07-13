@@ -184,17 +184,18 @@ function chargerFlux(blog) {
     return new Promise((resolve, reject) => {
 
         const callback =
-           "callbackFlux" + Date.now() + Math.random().toString(36).substring(2);
-        
+            "callbackFlux" + Date.now() + Math.random().toString(36).substring(2);
+
         const script =
             document.createElement("script");
 
         const url =
-        blog.url +
-        "/feeds/posts/default" +
-        "?alt=json-in-script" +
-        "&max-results=500" +
-        "&callback=" + callback;
+            blog.url +
+            "/feeds/posts/default" +
+            "?alt=json-in-script" +
+            "&start-index=1" +
+            "&max-results=500" +
+            "&callback=" + callback;
 
 
         window[callback] = function(data) {
@@ -212,9 +213,7 @@ function chargerFlux(blog) {
             delete window[callback];
             script.remove();
 
-            reject(
-                new Error("Impossible de charger le flux")
-            );
+            reject(new Error("Impossible de charger le flux"));
 
         };
 
