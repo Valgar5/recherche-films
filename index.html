@@ -240,111 +240,82 @@ const blogs = [
 function chargerFlux(blog) {
 
     if (blog.type === "blogger") {
-        return chargerBlogger(blog);
-    }
-/*
-    if (blog.type === "wordpress") {
-        return chargerWordpress(blog);
+        return rechercherBlogger(blog);
     }
 
-    if (blog.type === "rss") {
-        return chargerRSS(blog);
-    }
-*/
     return Promise.reject(
-        new Error("Blog privé (invitation nécessaire)")
+        new Error("Type désactivé pour le moment")
     );
 }
 
 
 
-function chargerBlogger(blog) {
+function rechercherBlogger(blog) {
 
     return new Promise((resolve, reject) => {
 
-        let tousLesArticles = [];
-        let index = 1;
-        const taillePage = 500;
-
-        function chargerPage() {
-
-            const callback =
-                "callbackFlux" + Date.now() + Math.random().toString(36).substring(2);
-
-            const script = document.createElement("script");
-
-            const url =
-                blog.url +
-                "/feeds/posts/default" +
-                "?alt=json-in-script" +
-                "&start-index=" + index +
-                "&max-results=" + taillePage +
-                "&callback=" + callback;
+        const recherche =
+            document
+            .getElementById("recherche")
+            .value
+            .trim();
 
 
-            window[callback] = function(data) {
-
-                console.log(
-                    "PAGINATION",
-                    blog.nom,
-                    data.feed.link.map(l => l.rel + " : " + l.href)
-                );
-            
-             
-                delete window[callback];
-                script.remove();
+        const callback =
+            "callbackBlogger" +
+            Date.now() +
+            Math.random().toString(36).substring(2);
 
 
-                const articles = data.feed.entry || [];
-
-                tousLesArticles = tousLesArticles.concat(articles);
+        const script = document.createElement("script");
 
 
-                console.log(
-                    blog.nom,
-                    "chargés :",
-                    tousLesArticles.length
-                );
+        const url =
+            blog.url +
+            "/feeds/posts/default" +
+            "?alt=json-in-script" +
+            "&q=" +
+            encodeURIComponent(recherche) +
+            "&max-results=50" +
+            "&callback=" +
+            callback;
 
 
-                if (articles.length === taillePage) {
 
-                    index += taillePage;
-                    chargerPage();
+        window[callback] = function(data) {
 
-                } else {
+            delete window[callback];
+            script.remove();
 
-                    resolve({
-                        feed:{
-                            entry:tousLesArticles
-                        }
-                    });
 
+            resolve({
+
+                feed:{
+                    entry:data.feed.entry || []
                 }
 
-            };
+            });
+
+        };
 
 
-            script.onerror = function() {
+        script.onerror = function(){
 
-                delete window[callback];
-                script.remove();
+            delete window[callback];
+            script.remove();
 
-                reject(
-                    new Error("Impossible de charger le flux Blogger")
-                );
+            reject(
+                new Error(
+                    "Recherche impossible sur Blogger"
+                )
+            );
 
-            };
-
-
-            script.src = url;
-
-            document.body.appendChild(script);
-
-        }
+        };
 
 
-        chargerPage();
+        script.src=url;
+
+        document.body.appendChild(script);
 
     });
 
@@ -702,53 +673,108 @@ async function chercher() {
 
     status.innerHTML = "Recherche en cours...";
 
-const motsRecherche = film
-    .trim()
-    .split(/\s+/)
-    .map(mot => normaliser(mot))
-    .filter(mot => mot.length > 1);
 
-const promesses = blogs.map(blog => chargerFlux(blog));
+    const promesses =
+        blogs.map(blog => chargerFlux(blog));
 
-const reponses = await Promise.allSettled(promesses);
 
-for (let i = 0; i < reponses.length; i++) {
+    const reponses =
+        await Promise.allSettled(promesses);
 
-    const blog = blogs[i];
-    const resultat = reponses[i];
 
-    if (resultat.status === "fulfilled") {
 
-        const data = resultat.value;
+    for (let i = 0; i < reponses.length; i++) {
 
-        const articles = data.feed.entry || [];
 
-        console.log(blog.nom, "total articles :", articles.length);
+        const blog = blogs[i];
 
-        console.log(blog.nom, articles.map(a => a.title.$t));
+        const resultat = reponses[i];
 
-        let trouve = false;
 
-        for (const article of articles) {
 
-            const titre = article.title.$t || "";
+        if (resultat.status === "fulfilled") {
 
-                const contenu = article.content ? article.content.$t : "";
-                
-                const texteRecherche =
-                    normaliser(titre + " " + contenu);
-                
-                const correspond = motsRecherche.some(mot =>
-                    texteRecherche.includes(mot)
+
+            const data = resultat.value;
+
+
+            const articles =
+                data.feed.entry || [];
+
+
+
+            console.log(
+                blog.nom,
+                "résultats Blogger :",
+                articles.length
+            );
+
+
+
+            for (const article of articles) {
+
+
+                const titre =
+                    article.title.$t || "";
+
+
+
+                const lien =
+                    article.link.find(
+                        l => l.rel === "alternate"
                     );
 
-                    if (!correspond)
-                    continue;
-            trouve = true;
 
-            const lien = article.link.find(
-                l => l.rel === "alternate"
-            );
+
+                if (!lien) {
+                    continue;
+                }
+
+
+
+                html += `
+                <div class="resultat">
+
+                    <div class="blog">
+                    ${blog.nom}
+                    </div>
+
+                    ${titre}<br>
+
+                    <a href="${lien.href}" target="_blank">
+                    Ouvrir l'article
+                    </a>
+
+                </div>
+                `;
+
+
+            }
+
+
+
+            if (articles.length === 0) {
+
+
+                html += `
+                <div class="resultat">
+
+                    <div class="blog">
+                    ${blog.nom}
+                    </div>
+
+                    Aucun résultat
+
+                </div>
+                `;
+
+            }
+
+
+
+        } else {
+
+
 
             html += `
             <div class="resultat">
@@ -757,52 +783,29 @@ for (let i = 0; i < reponses.length; i++) {
                 ${blog.nom}
                 </div>
 
-                ${titre}<br>
-
-                <a href="${lien.href}" target="_blank">
-                Ouvrir l'article
-                </a>
+                Erreur :
+                ${resultat.reason.message}
 
             </div>
             `;
+
+
         }
 
-        if (!trouve) {
 
-            html += `
-            <div class="resultat">
-            ${blog.nom} :
-            aucun titre trouvé
-            (${articles.length} articles lus)
-            </div>
-            `;
-        }
-
-    } else {
-
-        html += `
-        <div class="resultat">
-
-            <div class="blog">
-            ${blog.nom}
-            </div>
-
-            Erreur :
-            ${resultat.reason.message}
-
-        </div>
-        `;
     }
-}
+
 
 
     status.innerHTML =
         "Terminé";
 
 
+
     resultats.innerHTML =
         html ||
         "Aucun résultat";
+
 
 }
 
