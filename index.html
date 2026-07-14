@@ -283,14 +283,14 @@ function chargerBlogger(blog) {
 
 
             window[callback] = function(data) {
-/*
+
                 console.log(
                     "PAGINATION",
                     blog.nom,
                     data.feed.link
                 );
-            */
-                alert("TEST PAGINATION " + blog.nom);
+            
+             
                 delete window[callback];
                 script.remove();
 
