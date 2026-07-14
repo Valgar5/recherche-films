@@ -287,7 +287,7 @@ function chargerBlogger(blog) {
                 console.log(
                     "PAGINATION",
                     blog.nom,
-                    data.feed.link
+                    data.feed.link.map(l => l.rel + " : " + l.href)
                 );
             
              
