@@ -1,163 +1,180 @@
 <!DOCTYPE html>
 <html lang="fr">
+
 <head>
 <meta charset="UTF-8">
-<title>Recherche films</title>
+<title>Moteur films Blogger</title>
+
 <style>
+
 body {
     font-family: Arial, sans-serif;
-    max-width: 900px;
-    margin: 40px auto;
-    background: #111;
-    color: #eee;
+    max-width:900px;
+    margin:40px auto;
+    background:#111;
+    color:#eee;
 }
 
 h1 {
-    color: #f5c542;
+    color:#f5c542;
 }
 
 input {
-    width: 70%;
-    padding: 12px;
-    font-size: 18px;
+    width:70%;
+    padding:12px;
+    font-size:18px;
 }
 
 button {
-    padding: 12px 18px;
-    font-size: 18px;
-    cursor: pointer;
+    padding:12px 18px;
+    font-size:18px;
+    cursor:pointer;
 }
 
 .resultat {
-    margin-top: 20px;
-    padding: 15px;
-    background: #222;
-    border-radius: 8px;
+
+    margin-top:20px;
+    padding:15px;
+    background:#222;
+    border-radius:8px;
+
 }
 
 .blog {
-    color: #f5c542;
-    font-weight: bold;
+
+    color:#f5c542;
+    font-weight:bold;
+
 }
 
 a {
-    color: #7ec8ff;
+    color:#7ec8ff;
 }
+
+
 </style>
+
 </head>
+
 
 <body>
 
+
 <h1>Recherche films</h1>
 
+
 <input id="recherche" placeholder="Titre du film">
-<button onclick="chercher()">Rechercher</button>
+
+<button onclick="chercher()">
+Rechercher
+</button>
+
 
 <div id="status"></div>
+
 <div id="resultats"></div>
+
 
 
 <script>
 
-const blogs = [
-    {
-        nom: "Indianagilles",
-        url: "https://indianagilles.blogspot.com"
-    }
+
+const blogs=[
+
+{
+nom:"Indianagilles",
+url:"https://indianagilles.blogspot.com"
+}
+
 ];
 
 
 
-async function chercher() {
-
-    const terme =
-        document
-        .getElementById("recherche")
-        .value
-        .trim();
 
 
-    if(!terme){
-        return;
-    }
+function chargerFlux(blog,start){
 
 
-    const resultats =
-        document.getElementById("resultats");
+return new Promise((resolve,reject)=>{
 
 
-    const status =
-        document.getElementById("status");
+const callback =
 
-
-    resultats.innerHTML = "";
-    status.innerHTML = "Recherche en cours...";
-
-
-    let html = "";
-
-
-    for(const blog of blogs){
-
-
-        const articles =
-            await rechercherBlog(blog, terme);
+"bloggerCallback" +
+Date.now() +
+Math.random().toString(36).substring(2);
 
 
 
-        html += `
-        <div class="resultat">
+window[callback]=function(data){
 
-            <div class="blog">
-            ${blog.nom}
-            </div>
 
-            ${articles.length} résultat(s)
+delete window[callback];
 
-        </div>
-        `;
+
+const articles =
+data.feed.entry || [];
 
 
 
-        articles.forEach(article=>{
+resolve({
+
+articles:articles,
+
+total:
+Number(
+data.feed.openSearch$totalResults.$t
+)
+
+});
 
 
-            html += `
-
-            <div class="resultat">
-
-                <div class="blog">
-                ${blog.nom}
-                </div>
-
-
-                <a href="${article.url}" target="_blank">
-                ${article.titre}
-                </a>
-
-
-                <br><br>
-
-                ${article.resume || ""}
-
-
-            </div>
-
-            `;
-
-
-        });
-
-
-    }
+};
 
 
 
-    status.innerHTML="Terminé";
+const script=document.createElement("script");
 
 
-    resultats.innerHTML =
-        html || "Aucun résultat";
+
+script.onerror=function(){
+
+delete window[callback];
+
+reject(
+new Error("Erreur chargement Blogger")
+);
+
+};
+
+
+
+script.src=
+
+blog.url +
+
+"/feeds/posts/default" +
+
+"?alt=json-in-script" +
+
+"&max-results=500" +
+
+"&start-index=" +
+
+start +
+
+"&callback=" +
+
+callback;
+
+
+
+document.body.appendChild(script);
+
+
+
+});
+
 
 }
 
@@ -165,104 +182,299 @@ async function chercher() {
 
 
 
-async function rechercherBlog(blog, terme){
 
 
-    const url =
-        blog.url +
-        "/search?q=" +
-        encodeURIComponent(terme);
+async function chargerTout(blog){
 
 
+let tous=[];
 
-    const proxy =
-        "https://api.allorigins.win/raw?url=" +
-        encodeURIComponent(url);
+let index=1;
+
+let total=999999;
 
 
 
-    const response =
-        await fetch(proxy);
+while(index <= total){
+
+
+const page =
+await chargerFlux(blog,index);
 
 
 
-    const html =
-        await response.text();
-
-        console.log("TAILLE HTML :", html.length);
-        console.log(html.substring(0,1000));
+tous =
+tous.concat(page.articles);
 
 
 
-    const doc =
-        new DOMParser()
-        .parseFromString(html,"text/html");
+total =
+page.total;
 
 
 
-    const resultats=[];
+index += 500;
 
 
 
-    doc.querySelectorAll("a")
-    .forEach(a=>{
-
-
-        const href =
-            a.href || "";
-
-
-        const titre =
-            a.innerText.trim();
+console.log(
+blog.nom,
+tous.length,
+"/",
+total
+);
 
 
 
-        /*
-          On garde uniquement
-          les liens vers des articles Blogger
-        */
+if(page.articles.length===0){
+break;
+}
 
-
-        if(
-            href.includes("indianagilles.blogspot.com")
-            &&
-            titre.length > 5
-        ){
-
-            resultats.push({
-
-                titre:titre,
-
-                url:href,
-
-                resume:""
-
-            });
-
-        }
-
-
-    });
-
-
-
-    /*
-       suppression des doublons
-    */
-
-    return [
-        ...new Map(
-            resultats.map(
-                r=>[r.url,r]
-            )
-        ).values()
-    ];
 
 
 }
+
+
+
+return tous;
+
+
+
+}
+
+
+
+
+
+
+
+
+function nettoyer(t){
+
+return t
+
+.toLowerCase()
+
+.normalize("NFD")
+
+.replace(/[\u0300-\u036f]/g,"");
+
+
+}
+
+
+
+
+
+
+
+async function chercher(){
+
+
+
+const terme =
+
+document
+.getElementById("recherche")
+.value
+.trim();
+
+
+
+if(!terme){
+return;
+}
+
+
+
+const status =
+document.getElementById("status");
+
+
+const resultat =
+document.getElementById("resultats");
+
+
+
+status.innerHTML="Chargement du blog...";
+
+resultat.innerHTML="";
+
+
+
+let html="";
+
+
+
+for(const blog of blogs){
+
+
+
+const articles =
+
+await chargerTout(blog);
+
+
+
+status.innerHTML =
+articles.length +
+" articles chargés";
+
+
+
+const mot =
+nettoyer(terme);
+
+
+
+const trouves =
+
+articles.filter(article=>{
+
+
+let texte="";
+
+
+
+texte +=
+article.title?.$t || "";
+
+
+
+texte +=
+article.summary?.$t || "";
+
+
+
+texte +=
+article.content?.$t || "";
+
+
+
+if(article.category){
+
+
+texte +=
+
+article.category
+
+.map(c=>c.term)
+
+.join(" ");
+
+
+}
+
+
+
+return
+
+nettoyer(texte)
+.includes(mot);
+
+
+
+});
+
+
+
+
+html += `
+
+<div class="resultat">
+
+<div class="blog">
+
+${blog.nom}
+
+</div>
+
+
+${trouves.length} résultat(s)
+
+</div>
+
+
+`;
+
+
+
+
+
+trouves.forEach(article=>{
+
+
+
+let lien="";
+
+
+
+article.link.forEach(l=>{
+
+if(l.rel==="alternate"){
+
+lien=l.href;
+
+}
+
+});
+
+
+
+
+html += `
+
+
+<div class="resultat">
+
+
+<div class="blog">
+
+${blog.nom}
+
+</div>
+
+
+<a href="${lien}" target="_blank">
+
+${article.title.$t}
+
+</a>
+
+
+</div>
+
+
+`;
+
+
+
+});
+
+
+
+}
+
+
+
+status.innerHTML="Terminé";
+
+
+resultat.innerHTML =
+
+html ||
+
+"Aucun résultat";
+
+
+
+}
+
 
 
 </script>
 
+
 </body>
+
 </html>
