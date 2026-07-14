@@ -188,7 +188,9 @@ async function rechercherBlog(blog, terme){
 
     const html =
         await response.text();
-        console.log(html);
+
+        console.log("TAILLE HTML :", html.length);
+        console.log(html.substring(0,1000));
 
 
 
