@@ -254,77 +254,97 @@ function rechercherBlogger(blog) {
 
     return new Promise((resolve, reject) => {
 
-
-        const recherche =
-            document
-            .getElementById("recherche")
-            .value
-            .trim();
+        let tousLesArticles = [];
+        let index = 1;
+        let terminer = false;
 
 
-        const callback =
-            "callbackBlogger" +
-            Date.now() +
-            Math.random().toString(36).substring(2);
+        function chargerPage() {
+
+            const callback =
+                "callbackBlogger" +
+                Date.now() +
+                Math.random().toString(36).substring(2);
 
 
-        const script = document.createElement("script");
+            const script = document.createElement("script");
 
 
-        const url =
-            blog.url +
-            "/feeds/posts/default" +
-            "?alt=json-in-script" +
-            "&max-results=500" +
-            "&callback=" +
-            callback;
+            const url =
+                blog.url +
+                "/feeds/posts/default" +
+                "?alt=json-in-script" +
+                "&max-results=100" +
+                "&start-index=" + index +
+                "&callback=" +
+                callback;
 
 
+            window[callback] = function(data) {
 
-        window[callback] = function(data) {
-
-            console.log(
-                blog.nom,
-                data.feed.entry.map(e => e.title.$t)
-            );
-
-            delete window[callback];
-            script.remove();
+                delete window[callback];
+                script.remove();
 
 
-            console.log(
-                blog.nom,
-                data.feed.entry.map(e => e.title.$t)
-            );
+                const articles =
+                    data.feed.entry || [];
 
-            resolve({
 
-                feed:{
-                    entry:data.feed.entry || []
+                tousLesArticles =
+                    tousLesArticles.concat(articles);
+
+
+                console.log(
+                    blog.nom,
+                    "page",
+                    index,
+                    "reçus",
+                    articles.length,
+                    "total",
+                    tousLesArticles.length
+                );
+
+
+                if (articles.length < 100) {
+
+                    resolve({
+                        feed:{
+                            entry:tousLesArticles
+                        }
+                    });
+
+                } else {
+
+                    index += 100;
+                    chargerPage();
+
                 }
 
-            });
-
-        };
+            };
 
 
-        script.onerror = function(){
+            script.onerror = function(){
 
-            delete window[callback];
-            script.remove();
+                delete window[callback];
+                script.remove();
 
-            reject(
-                new Error(
-                    "Recherche impossible sur Blogger"
-                )
-            );
+                reject(
+                    new Error(
+                        "Recherche impossible sur Blogger"
+                    )
+                );
 
-        };
+            };
 
 
-        script.src=url;
+            script.src=url;
 
-        document.body.appendChild(script);
+            document.body.appendChild(script);
+
+        }
+
+
+        chargerPage();
 
     });
 
