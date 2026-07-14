@@ -169,20 +169,15 @@ async function rechercherBlog(blog, terme){
 
 
     const url =
-
-    blog.url +
-
-    "/search?q=" +
-
-    encodeURIComponent(terme);
+        blog.url +
+        "/search?q=" +
+        encodeURIComponent(terme);
 
 
 
     const proxy =
-
-    "https://api.allorigins.win/raw?url=" +
-
-    encodeURIComponent(url);
+        "https://api.allorigins.win/raw?url=" +
+        encodeURIComponent(url);
 
 
 
@@ -193,6 +188,7 @@ async function rechercherBlog(blog, terme){
 
     const html =
         await response.text();
+        console.log(html);
 
 
 
@@ -206,67 +202,59 @@ async function rechercherBlog(blog, terme){
 
 
 
-    /*
-       Blogger utilise généralement
-       des blocs .post
-    */
+    doc.querySelectorAll("a")
+    .forEach(a=>{
 
 
-    doc.querySelectorAll(".post")
-    .forEach(post=>{
+        const href =
+            a.href || "";
 
 
         const titre =
-            post.querySelector(".post-title");
+            a.innerText.trim();
 
 
 
-        if(!titre){
-            return;
+        /*
+          On garde uniquement
+          les liens vers des articles Blogger
+        */
+
+
+        if(
+            href.includes("indianagilles.blogspot.com")
+            &&
+            titre.length > 5
+        ){
+
+            resultats.push({
+
+                titre:titre,
+
+                url:href,
+
+                resume:""
+
+            });
+
         }
-
-
-
-        const lien =
-            titre.querySelector("a");
-
-
-
-        if(!lien){
-            return;
-        }
-
-
-
-        const resume =
-            post.querySelector(".post-body")
-            ?.innerText
-            ?.substring(0,300);
-
-
-
-        resultats.push({
-
-            titre:
-                titre.innerText.trim(),
-
-
-            url:
-                lien.href,
-
-
-            resume:
-                resume || ""
-
-        });
-
 
 
     });
 
 
 
-    return resultats;
+    /*
+       suppression des doublons
+    */
+
+    return [
+        ...new Map(
+            resultats.map(
+                r=>[r.url,r]
+            )
+        ).values()
+    ];
 
 
 }
