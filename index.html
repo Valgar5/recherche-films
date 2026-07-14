@@ -268,7 +268,7 @@ function rechercherBlogger(blog) {
             blog.url +
             "/feeds/posts/default" +
             "?alt=json-in-script" +
-            "&max-results=500" +
+            "&max-results=500&start-index=1" +
             "&callback=" +
             callback;
 
@@ -281,6 +281,11 @@ function rechercherBlogger(blog) {
 
 
             resolve({
+
+                console.log(
+                    blog.nom,
+                    data.feed.entry.map(e => e.title.$t)
+                );
 
                 feed:{
                     entry:data.feed.entry || []
