@@ -255,6 +255,13 @@ function rechercherBlogger(blog) {
     return new Promise((resolve, reject) => {
 
 
+        const recherche =
+            document
+            .getElementById("recherche")
+            .value
+            .trim();
+
+
         const callback =
             "callbackBlogger" +
             Date.now() +
@@ -268,7 +275,9 @@ function rechercherBlogger(blog) {
             blog.url +
             "/feeds/posts/default" +
             "?alt=json-in-script" +
-            "&max-results=500&start-index=1" +
+            "&q=" +
+            encodeURIComponent(recherche) +
+            "&max-results=500" +
             "&callback=" +
             callback;
 
@@ -280,20 +289,21 @@ function rechercherBlogger(blog) {
             script.remove();
 
 
+            console.log(
+                blog.nom,
+                "trouvés :",
+                data.feed.entry ? data.feed.entry.length : 0
+            );
+
+
             resolve({
 
-                console.log(
-                    blog.nom,
-                    data.feed.entry.map(e => e.title.$t)
-                );
-                
-                resolve({
-                
-                    feed:{
-                        entry:data.feed.entry || []
-                    }
-                
-                });
+                feed:{
+                    entry:data.feed.entry || []
+                }
+
+            });
+
         };
 
 
