@@ -286,13 +286,14 @@ function rechercherBlogger(blog) {
                     blog.nom,
                     data.feed.entry.map(e => e.title.$t)
                 );
-
-                feed:{
-                    entry:data.feed.entry || []
-                }
-
-            });
-
+                
+                resolve({
+                
+                    feed:{
+                        entry:data.feed.entry || []
+                    }
+                
+                });
         };
 
 
