@@ -284,8 +284,12 @@ function chargerBlogger(blog) {
 
             window[callback] = function(data) {
 
-                console.log(data.feed.link);
-
+                console.log(
+                    "PAGINATION",
+                    blog.nom,
+                    data.feed.link
+                );
+            
                 delete window[callback];
                 script.remove();
 
