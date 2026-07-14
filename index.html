@@ -242,7 +242,7 @@ function chargerFlux(blog) {
     if (blog.type === "blogger") {
         return chargerBlogger(blog);
     }
-
+/*
     if (blog.type === "wordpress") {
         return chargerWordpress(blog);
     }
@@ -250,7 +250,7 @@ function chargerFlux(blog) {
     if (blog.type === "rss") {
         return chargerRSS(blog);
     }
-
+*/
     return Promise.reject(
         new Error("Blog privé (invitation nécessaire)")
     );
@@ -690,7 +690,11 @@ async function chercher() {
 
     status.innerHTML = "Recherche en cours...";
 
-const rechercheNorm = normaliser(film);
+const motsRecherche = film
+    .trim()
+    .split(/\s+/)
+    .map(mot => normaliser(mot))
+    .filter(mot => mot.length > 1);
 
 const promesses = blogs.map(blog => chargerFlux(blog));
 
@@ -722,8 +726,12 @@ for (let i = 0; i < reponses.length; i++) {
                 const texteRecherche =
                     normaliser(titre + " " + contenu);
                 
-                if (!texteRecherche.includes(rechercheNorm))
-                continue;
+                const correspond = motsRecherche.some(mot =>
+                    texteRecherche.includes(mot)
+                    );
+
+                    if (!correspond)
+                    continue;
             trouve = true;
 
             const lien = article.link.find(
