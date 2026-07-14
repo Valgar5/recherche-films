@@ -254,12 +254,6 @@ function rechercherBlogger(blog) {
 
     return new Promise((resolve, reject) => {
 
-        const recherche =
-            document
-            .getElementById("recherche")
-            .value
-            .trim();
-
 
         const callback =
             "callbackBlogger" +
@@ -274,8 +268,6 @@ function rechercherBlogger(blog) {
             blog.url +
             "/feeds/posts/default" +
             "?alt=json-in-script" +
-            "&q=" +
-            encodeURIComponent(recherche) +
             "&max-results=500" +
             "&callback=" +
             callback;
