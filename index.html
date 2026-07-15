@@ -233,8 +233,10 @@ async function chercher(){
 
     let html = "";
 
-    const mot = nettoyer(terme);
-
+    const mots = nettoyer(terme)
+    .split(/\s+/)
+    .filter(m => m.length > 0);
+    
     blogs.forEach((blog,index)=>{
 
         const articles = listes[index];
@@ -255,8 +257,10 @@ async function chercher(){
 
             }
 
-            return nettoyer(texte).includes(mot);
+            const texteNettoye = nettoyer(texte);
 
+            return mots.every(mot => texteNettoye.includes(mot));
+            
         });
 
         html += `
