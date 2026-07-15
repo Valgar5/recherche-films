@@ -238,16 +238,6 @@ const blogs = [
 
 ];
 
-    const blogsWordpress = [
-
-    {
-        nom: "bmoviesblog",
-        url: "https://bmoviesblog.wordpress.com",
-        type: "wordpress"
-    }
-
-];
-
 const cache = {};
 
 function nettoyer(texte){
@@ -359,40 +349,6 @@ document.body.appendChild(script);
 
 }
 
-    async function chargerWordpress(blog){
-
-    if(cache[blog.nom]){
-        return cache[blog.nom];
-    }
-
-
-    const url =
-        blog.url +
-        "/wp-json/wp/v2/posts?per_page=100";
-
-
-    const response = await fetch(url);
-
-
-    if(!response.ok){
-
-        throw new Error(
-            "Impossible de charger " + blog.nom
-        );
-
-    }
-
-
-    const posts = await response.json();
-
-
-    cache[blog.nom] = posts;
-
-
-    return posts;
-
-}
-
 async function chercher(){
 
     const terme = document
@@ -413,24 +369,8 @@ async function chercher(){
 
     // Chargement parallèle des blogs
     const listes = await Promise.all(
-
-    blogs.map(blog => {
-
-        if(blog.type==="wordpress"){
-
-            return chargerWordpress(blog);
-
-        }
-
-        else{
-
-            return chargerTout(blog);
-
-        }
-
-    })
-
-);
+        blogs.map(blog => chargerTout(blog))
+    );
 
     status.innerHTML = "Recherche en cours...";
 
@@ -446,24 +386,8 @@ async function chercher(){
 
         const trouves = articles.filter(article=>{
 
-            let titre = "";
-            let contenu = "";
-            
-            
-            if(article.title?.$t){
-            
-                // Blogger
-                titre = article.title.$t;
-                contenu = article.summary?.$t || "";
-            
-            }
-            else{
-            
-                // WordPress
-                titre = article.title?.rendered || "";
-                contenu = article.excerpt?.rendered || "";
-            
-            }
+            let titre = article.title?.$t || "";
+            let contenu = article.summary?.$t || "";
             
             let texte = titre + " " + contenu;
             
@@ -500,21 +424,18 @@ ${trouves.length} résultat(s)
 
             if(article.link){
 
-                lien = article.link;
-            
-            }
-            
-            else if(article.link){
-            
                 article.link.forEach(l=>{
-            
+
                     if(l.rel==="alternate"){
-                        lien=l.href;
+
+                        lien = l.href;
+
                     }
-            
+
                 });
-            
+
             }
+
             html += `
 
 <div class="resultat">
@@ -552,4 +473,3 @@ ${article.title?.$t || "Sans titre"}
 </body>
 
 </html>
-
