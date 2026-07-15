@@ -84,7 +84,7 @@ Rechercher
 
 <script>
 
-const MAX_RESULTS = 500;
+const MAX_RESULTS = 50;
 
 const blogs = [
 
@@ -125,13 +125,15 @@ delete window[callback];
 
 script.remove();
 
-const articles=data.feed.entry || [];
+const articles = data.feed?.entry || [];
 
 resolve({
 
-articles,
+    articles,
 
-total:Number(data.feed.openSearch$totalResults.$t)
+    total: Number(
+        data.feed?.openSearch$totalResults?.$t || 0
+    )
 
 });
 
@@ -192,7 +194,7 @@ document.body.appendChild(script);
         );
 
         // Dernière page
-        if(page.articles.length < MAX_RESULTS){
+        if(page.articles.length === 0){
             break;
         }
 
