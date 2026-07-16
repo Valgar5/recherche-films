@@ -47,6 +47,24 @@ button{
     margin-bottom:8px;
 }
 
+    .compteur{
+    color:#7cff7c;
+    font-weight:bold;
+    margin-left:10px;
+}
+
+.film{
+    margin-top:8px;
+    padding:10px;
+    background:#1a1a1a;
+    border-radius:5px;
+}
+
+.film a{
+    color:#7ec8ff;
+    font-size:18px;
+}
+
 a{
     color:#7ec8ff;
     text-decoration:none;
@@ -503,22 +521,21 @@ async function chercher(){
 
 
 
-        html += `
+        if(trouves.length){
 
+html += `
 <div class="resultat">
 
 <div class="blog">
-
 ${blog.nom}
-
-</div>
-
-${trouves.length} résultat(s)
-
+<span class="compteur">
+(${trouves.length} résultat(s))
+</span>
 </div>
 
 `;
 
+}
 
 
         trouves.forEach(article=>{
@@ -552,32 +569,15 @@ ${trouves.length} résultat(s)
 
             html += `
 
-
-<div class="resultat">
-
-
-<div class="blog">
-
-${blog.nom}
-
-</div>
-
-
+<div class="film">
 
 <a href="${lien}" target="_blank">
-
-
 ${article.title?.$t || "Sans titre"}
-
-
 </a>
-
 
 </div>
 
-
 `;
-
 
 
         });
