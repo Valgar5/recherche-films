@@ -538,36 +538,28 @@ ${blog.nom}
 }
 
 
-        trouves.forEach(article=>{
+trouves.forEach(article=>{
 
 
-            let lien = "";
+    let lien = "";
 
 
+    if(article.link){
 
-            if(article.link){
+        article.link.forEach(l=>{
 
+            if(l.rel==="alternate"){
 
-                article.link.forEach(l=>{
-
-
-                    if(l.rel==="alternate"){
-
-
-                        lien = l.href;
-
-
-                    }
-
-
-                });
-
+                lien = l.href;
 
             }
 
+        });
+
+    }
 
 
-            html += `
+    html += `
 
 <div class="film">
 
@@ -579,8 +571,16 @@ ${article.title?.$t || "Sans titre"}
 
 `;
 
+});
 
-        });
+
+if(trouves.length){
+
+html += `
+</div>
+`;
+
+}
 
 
 
