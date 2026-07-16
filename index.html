@@ -107,12 +107,14 @@ const blogs = [
         nom: "Blog de CarmeloMike : Restauration en tout genre",
         url: "https://carmelomike.blogspot.com"
     },
+
 /*
     {
         nom: "bmoviesblog",
         url: "https://bmoviesblog.wordpress.com"
     },
 */
+
     {
         nom: "BUDDY MOVIE REPACK",
         url: "https://buddy-movierepack.blogspot.com"
@@ -137,7 +139,8 @@ const blogs = [
         nom: "Un Cinéma Respecté by DVD2FAN",
         url: "https://cinerespect.blogspot.com"
     },
-*/
+    */
+
     {
         nom: "La Cinémathèque du Bis",
         url: "https://lacinemathequedubis.blogspot.com"
@@ -162,12 +165,14 @@ const blogs = [
         nom: "four tous 2",
         url: "https://nenard1974.blogspot.com"
     },
+
 /*
-     {
+    {
         nom: "hdmovpremier",
         url: "https://hdmovpremier.toile-libre.org"
     },
 */
+
     {
         nom: "HD PREMIERE",
         url: "https://hdmoviespremier.blogspot.com"
@@ -192,18 +197,6 @@ const blogs = [
         nom: "le paradis du cinéphile",
         url: "https://leparadisdufilm.blogspot.com"
     },
-/*
-    {
-        nom: "MiKE707TE@M",
-        url: "https://mike707team.blogspot.com"
-    }
-*/
-/*
-    {
-        nom: "Saiko no Chimu",
-        url: "https://saiko-no-chimu.fr"
-    },
-*/
     {
         nom: "le steadyblog",
         url: "https://steadyleblog.blogspot.com"
@@ -238,12 +231,14 @@ const blogs = [
         nom: "Warning Zone",
         url: "https://stalkerjany.blogspot.com"
     }
-    
+
 // ajouter ici d'autres blogs
 
 ];
 
+
 const cache = {};
+
 
 function nettoyer(texte){
 
@@ -257,21 +252,31 @@ return (texte || "")
 
 }
 
+
 function chargerFlux(blog,start){
 
 return new Promise((resolve,reject)=>{
 
-const callback="bloggerCallback"+Date.now()+Math.random().toString(36).substring(2);
+
+const callback =
+"bloggerCallback" +
+Date.now() +
+Math.random().toString(36).substring(2);
+
 
 const script=document.createElement("script");
 
+
 window[callback]=function(data){
+
 
 delete window[callback];
 
 script.remove();
 
+
 const articles = data.feed?.entry || [];
+
 
 resolve({
 
@@ -283,19 +288,27 @@ resolve({
 
 });
 
+
 };
 
+
 script.onerror=function(){
+
 
 delete window[callback];
 
 script.remove();
 
-reject(new Error("Impossible de charger "+blog.nom));
+
+reject(
+    new Error("Impossible de charger "+blog.nom)
+);
+
 
 };
 
-script.src=
+
+script.src =
 
 blog.url+
 
@@ -307,182 +320,305 @@ blog.url+
 
 "&callback="+callback;
 
+
 document.body.appendChild(script);
+
 
 });
 
+
 }
 
- async function chargerTout(blog){
+
+
+async function chargerTout(blog){
+
+
+    // Utilise le cache si le blog a déjà été chargé
 
     if(cache[blog.nom]){
+
         return cache[blog.nom];
+
     }
 
-    // Charge la première page
-    const premiere = await chargerFlux(blog,1);
 
-    let tous = [...premiere.articles];
+    let tous = [];
 
-    const total = premiere.total;
+    let index = 1;
 
-    // Prépare les index des pages restantes
-    const indexPages = [];
+    let total = Infinity;
 
-    for(let index = MAX_RESULTS + 1; index <= total; index += MAX_RESULTS){
-        indexPages.push(index);
-    }
 
-    // Nombre de pages chargées en même temps
-    const LOT = 10;
 
-    // Charge par groupes de 10
-    for(let i = 0; i < indexPages.length; i += LOT){
+    while(index <= total){
 
-        const groupe = indexPages.slice(i, i + LOT);
 
-        const pages = await Promise.all(
-            groupe.map(index => chargerFlux(blog,index))
+        const page = await chargerFlux(blog,index);
+
+
+        tous.push(...page.articles);
+
+
+        total = page.total;
+
+
+        console.log(
+            blog.nom,
+            tous.length,
+            "/",
+            total
         );
 
-        pages.forEach(page=>{
-            tous.push(...page.articles);
-        });
+
+        // Dernière page
+
+        if(page.articles.length === 0){
+
+            break;
+
+        }
+
+
+        index += MAX_RESULTS;
+
 
     }
+
 
     cache[blog.nom] = tous;
 
+
     return tous;
+
+
 }
 
+
+
 async function chercher(){
+
 
     const terme = document
         .getElementById("recherche")
         .value
         .trim();
 
+
+
     if(!terme){
+
         return;
+
     }
 
-    const status = document.getElementById("status");
-    const resultat = document.getElementById("resultats");
+
+
+    const status =
+        document.getElementById("status");
+
+
+    const resultat =
+        document.getElementById("resultats");
+
+
 
     resultat.innerHTML = "";
 
-    status.innerHTML = "Chargement des blogs...";
 
-    // Chargement parallèle des blogs
+    status.innerHTML =
+        "Chargement des blogs...";
+
+
+
     const listes = await Promise.all(
+
         blogs.map(blog => chargerTout(blog))
+
     );
 
-    status.innerHTML = "Recherche en cours...";
+
+    status.innerHTML =
+        "Recherche en cours...";
+
+
 
     let html = "";
 
+
+
     const mots = nettoyer(terme)
+
     .split(/\s+/)
+
     .filter(m => m.length > 0);
-    
+
     blogs.forEach((blog,index)=>{
+
 
         const articles = listes[index];
 
+
         const trouves = articles.filter(article=>{
 
-            let titre = article.title?.$t || "";
-            let contenu = article.summary?.$t || "";
-            
-            let texte = titre + " " + contenu;
-            
+
+            let titre =
+                article.title?.$t || "";
+
+
+            let contenu =
+                article.summary?.$t || "";
+
+
+
+            let texte =
+                titre + " " + contenu;
+
+
+
             if(article.category){
-            
-                texte += " " + article.category
+
+
+                texte += " " +
+                    article.category
                     .map(c=>c.term)
                     .join(" ");
-            
+
+
             }
 
-const texteNettoye = nettoyer(texte);
 
-return mots.every(mot => texteNettoye.includes(mot));
 
-            
+            const texteNettoye =
+                nettoyer(texte);
+
+
+
+            return mots.every(
+                mot => texteNettoye.includes(mot)
+            );
+
+
         });
 
+
+
         html += `
+
 <div class="resultat">
 
 <div class="blog">
+
 ${blog.nom}
+
 </div>
 
 ${trouves.length} résultat(s)
 
 </div>
+
 `;
 
-                trouves.forEach(article=>{
+
+
+        trouves.forEach(article=>{
+
 
             let lien = "";
 
+
+
             if(article.link){
+
 
                 article.link.forEach(l=>{
 
+
                     if(l.rel==="alternate"){
+
 
                         lien = l.href;
 
+
                     }
+
 
                 });
 
+
             }
+
+
 
             html += `
 
+
 <div class="resultat">
 
+
 <div class="blog">
+
 ${blog.nom}
+
 </div>
+
+
 
 <a href="${lien}" target="_blank">
 
+
 ${article.title?.$t || "Sans titre"}
+
 
 </a>
 
+
 </div>
+
 
 `;
 
+
+
         });
+
+
 
     });
 
+
+
+
     status.innerHTML =
+
         "Terminé — " +
-        listes.reduce((total,articles)=>total+articles.length,0) +
+
+        listes.reduce(
+            (total,articles)=>
+            total+articles.length,
+            0
+        ) +
+
         " articles indexés";
 
+
+
+
     resultat.innerHTML =
-        html || "<div class='resultat'>Aucun résultat.</div>";
+
+        html ||
+
+        "<div class='resultat'>Aucun résultat.</div>";
+
+
 
 }
 
-    window.addEventListener("load", () => {
-        blogs.forEach(blog => {
-            chargerTout(blog).catch(console.error);
-        });
-            });
-    
-    </script>
+
+</script>
+
 
 </body>
+
 
 </html>
