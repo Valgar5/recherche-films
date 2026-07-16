@@ -315,43 +315,32 @@ document.body.appendChild(script);
 
     async function chargerTout(blog){
 
-    // Utilise le cache si le blog a déjà été chargé
     if(cache[blog.nom]){
         return cache[blog.nom];
     }
 
-    let tous = [];
-    let index = 1;
-    let total = Infinity;
+    // première page
+    const premiere = await chargerFlux(blog,1);
 
-    while(index <= total){
+    let tous = [...premiere.articles];
 
-        const page = await chargerFlux(blog,index);
+    const total = premiere.total;
 
-        tous.push(...page.articles);
+    const promesses = [];
 
-        total = page.total;
-
-        console.log(
-            blog.nom,
-            tous.length,
-            "/",
-            total
-        );
-
-        // Dernière page
-        if(page.articles.length === 0){
-            break;
-        }
-
-        index += MAX_RESULTS;
-
+    for(let index = MAX_RESULTS + 1; index <= total; index += MAX_RESULTS){
+        promesses.push(chargerFlux(blog,index));
     }
 
-    cache[blog.nom] = tous;
+    const pages = await Promise.all(promesses);
+
+    pages.forEach(page=>{
+        tous.push(...page.articles);
+    });
+
+    cache[blog.nom]=tous;
 
     return tous;
-
 }
 
 async function chercher(){
