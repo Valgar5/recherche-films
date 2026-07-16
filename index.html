@@ -326,17 +326,24 @@ document.body.appendChild(script);
 
     const total = premiere.total;
 
-    // Prépare les autres pages
-    const promesses = [];
+    // Prépare les index des pages restantes
+    const indexPages = [];
 
     for(let index = MAX_RESULTS + 1; index <= total; index += MAX_RESULTS){
-        promesses.push(chargerFlux(blog,index));
+        indexPages.push(index);
     }
 
-    // Charge toutes les pages restantes en parallèle
-    if(promesses.length){
+    // Nombre de pages chargées en même temps
+    const LOT = 10;
 
-        const pages = await Promise.all(promesses);
+    // Charge par groupes de 10
+    for(let i = 0; i < indexPages.length; i += LOT){
+
+        const groupe = indexPages.slice(i, i + LOT);
+
+        const pages = await Promise.all(
+            groupe.map(index => chargerFlux(blog,index))
+        );
 
         pages.forEach(page=>{
             tous.push(...page.articles);
