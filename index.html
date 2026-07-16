@@ -334,7 +334,15 @@ document.body.appendChild(script);
     }
 
     // Charge toutes les pages restantes en parallèle
+    if(promesses.length){
+
     const pages = await Promise.all(promesses);
+
+    pages.forEach(page=>{
+        tous.push(...page.articles);
+    });
+
+}
 
     pages.forEach(page=>{
         tous.push(...page.articles);
@@ -464,6 +472,10 @@ ${article.title?.$t || "Sans titre"}
 
 }
 
+    window.addEventListener("load", () => {
+        blogs.forEach(blog => chargerTout(blog));
+        });
+    
     </script>
 
 </body>
