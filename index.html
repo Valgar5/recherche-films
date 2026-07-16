@@ -313,32 +313,34 @@ document.body.appendChild(script);
 
 }
 
-    async function chargerTout(blog){
+ async function chargerTout(blog){
 
     if(cache[blog.nom]){
         return cache[blog.nom];
     }
 
-    // première page
+    // Charge la première page
     const premiere = await chargerFlux(blog,1);
 
     let tous = [...premiere.articles];
 
     const total = premiere.total;
 
+    // Prépare les autres pages
     const promesses = [];
 
     for(let index = MAX_RESULTS + 1; index <= total; index += MAX_RESULTS){
         promesses.push(chargerFlux(blog,index));
     }
 
+    // Charge toutes les pages restantes en parallèle
     const pages = await Promise.all(promesses);
 
     pages.forEach(page=>{
         tous.push(...page.articles);
     });
 
-    cache[blog.nom]=tous;
+    cache[blog.nom] = tous;
 
     return tous;
 }
