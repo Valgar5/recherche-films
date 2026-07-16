@@ -338,12 +338,7 @@ document.body.appendChild(script);
 
     const pages = await Promise.all(promesses);
 
-    pages.forEach(page=>{
-        tous.push(...page.articles);
-    });
-
-}
-
+    
     pages.forEach(page=>{
         tous.push(...page.articles);
     });
